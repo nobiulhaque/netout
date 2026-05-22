@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Production builds and installers
+dist/
+NetOut-win32-x64/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS metadata
+.DS_Store
+Thumbs.db

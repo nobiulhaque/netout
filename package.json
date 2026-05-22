@@ -1,0 +1,53 @@
+{
+  "name": "netout",
+  "version": "1.0.0",
+  "description": "Quickly toggle physical network adapters on/off with custom keyboard shortcuts",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:icon": "node build-ico.js",
+    "package": "electron-packager . NetOut --platform=win32 --arch=x64 --overwrite --asar --icon=src/renderer/icon.ico --win32metadata.requested-execution-level=requireAdministrator",
+    "dist": "electron-builder --windows"
+  },
+  "build": {
+    "appId": "com.riyad.netout",
+    "productName": "NetOut",
+    "directories": {
+      "output": "dist"
+    },
+    "icon": "src/renderer/icon.ico",
+    "win": {
+      "icon": "src/renderer/icon.ico",
+      "requestedExecutionLevel": "requireAdministrator",
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "NetOut",
+      "runAfterFinish": true,
+      "include": "build/installer.nsh",
+      "installerIcon": "src/renderer/icon.ico",
+      "uninstallerIcon": "src/renderer/icon.ico"
+    }
+  },
+  "keywords": [
+    "network",
+    "toggle",
+    "ethernet",
+    "wifi",
+    "shortcut"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^30.0.1",
+    "electron-builder": "^26.8.1",
+    "electron-packager": "^17.1.2",
+    "png-to-ico": "^3.0.1"
+  }
+}
