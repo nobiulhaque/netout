@@ -18,7 +18,7 @@ It operates by toggling your computer's physical network adapters (Ethernet and 
 
 ## 🚀 How to Download & Install
 
-1. Go to the [**Releases**](https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/releases) page on the GitHub repository.
+1. Go to the [**Releases**](https://github.com/nobiulhaque/netout/releases) page on the GitHub repository.
 2. Download the latest installer file: **`NetOut Setup 1.0.0.exe`**.
 3. Run the installer (you can customize the installation folder; it will automatically create a `NetOut` subfolder).
 4. Launch the application.
