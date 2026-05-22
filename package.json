@@ -1,6 +1,6 @@
 {
   "name": "netout",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Quickly toggle physical network adapters on/off with custom keyboard shortcuts",
   "main": "src/main/main.js",
   "scripts": {
