@@ -32,6 +32,8 @@ function createWindow() {
     width: 400,
     height: 580,
     resizable: false,
+    maximizable: false,
+    fullscreenable: false,
     frame: false,
     transparent: false,
     backgroundColor: '#0a0b10',
