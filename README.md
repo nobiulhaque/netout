@@ -19,7 +19,7 @@ It operates by toggling your computer's physical network adapters (Ethernet and 
 ## 🚀 How to Download & Install
 
 1. Go to the [**Releases**](https://github.com/nobiulhaque/netout/releases) page on the GitHub repository.
-2. Download the latest installer file: **`NetOut Setup 1.0.1.exe`**.
+2. Download the latest installer file: **`NetOut Setup 1.1.0.exe`**.
 3. Run the installer (you can customize the installation folder; it will automatically create a `NetOut` subfolder).
 4. Launch the application.
    > ⚠️ **Note**: Windows requires Administrator privileges to enable or disable network hardware. When you start NetOut, a standard Windows User Account Control (UAC) prompt will ask for permission. This is normal and required for the application to toggle adapters.
@@ -67,7 +67,7 @@ If you want to run the project in development mode or build it yourself:
   ```bash
   npm run dist
   ```
-  The built installer will be generated under the `dist/` directory as `NetOut Setup 1.0.1.exe`.
+  The built installer will be generated under the `dist/` directory as `NetOut Setup 1.1.0.exe`.
 
 ---
 

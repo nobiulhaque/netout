@@ -14,7 +14,17 @@ const {
 const { registerGlobalShortcut, initShortcut } = require('./shortcut');
 const { createTray } = require('./tray');
 
-// Single instance lock
+// Command line optimization switches for minimal memory & background execution
+app.commandLine.appendSwitch('disable-gpu');
+app.commandLine.appendSwitch('disable-software-rasterizer');
+app.commandLine.appendSwitch('disable-gpu-sandbox');
+app.commandLine.appendSwitch('disable-http-cache');
+app.commandLine.appendSwitch('disable-background-networking');
+app.commandLine.appendSwitch('disable-sync');
+app.commandLine.appendSwitch('disable-default-apps');
+app.commandLine.appendSwitch('proxy-server', 'direct://');
+app.commandLine.appendSwitch('js-flags', '--max-semi-space-size=1 --max-old-space-size=16');
+
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
   app.quit();
@@ -27,7 +37,25 @@ let pollingInterval = null;
 // Initialize the main window getter for PowerShell and shortcuts
 setMainWindowGetter(() => mainWindow);
 
-function createWindow() {
+function startPolling() {
+  if (pollingInterval) return;
+  pollingInterval = setInterval(async () => {
+    if (getIsToggling()) return;
+    const adapters = await getPhysicalAdapters();
+    if (mainWindow && mainWindow.webContents && !getIsToggling()) {
+      mainWindow.webContents.send('adapters-updated', adapters);
+    }
+  }, 4000);
+}
+
+function stopPolling() {
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+    pollingInterval = null;
+  }
+}
+
+function createWindow(showImmediately = false) {
   mainWindow = new BrowserWindow({
     width: 400,
     height: 580,
@@ -55,26 +83,44 @@ function createWindow() {
   });
 
   mainWindow.once('ready-to-show', () => {
-    const settings = getSettings();
-    // If started minimized (e.g. at startup/settings), hide window
-    const shouldHide = settings.startMinimized || process.argv.includes('--hidden');
-    if (!shouldHide) {
+    if (showImmediately) {
       mainWindow.show();
+    } else {
+      const settings = getSettings();
+      // If started minimized (e.g. at startup/settings), hide window
+      const shouldHide = settings.startMinimized || process.argv.includes('--hidden');
+      if (!shouldHide) {
+        mainWindow.show();
+      }
     }
   });
 
   mainWindow.on('close', (event) => {
     const settings = getSettings();
     if (!app.isQuitting && settings.minimizeToTray) {
-      event.preventDefault();
-      mainWindow.hide();
+      // Allow the window to be closed/destroyed instead of just hidden.
+      // This kills the renderer process and saves 40-50MB RAM.
+    } else if (!app.isQuitting && !settings.minimizeToTray) {
+      app.isQuitting = true;
     }
-    return false;
   });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
+    stopPolling();
   });
+
+  startPolling();
+}
+
+function showWindow() {
+  if (!mainWindow) {
+    createWindow(true);
+  } else {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+  }
 }
 
 app.whenReady().then(async () => {
@@ -85,41 +131,36 @@ app.whenReady().then(async () => {
   log(`App whenReady. Admin: ${isAdmin}. Args: ${JSON.stringify(process.argv)}`);
 
   log('Initializing window, tray, and shortcuts...');
-  createWindow();
-  createTray(() => mainWindow);
+  
+  const settings = getSettings();
+  const shouldHide = settings.startMinimized || process.argv.includes('--hidden');
+  
+  if (!shouldHide) {
+    createWindow(false);
+  }
+  
+  createTray(showWindow);
   initShortcut(() => mainWindow);
-
-  // Background poller to refresh adapter status in UI
-  pollingInterval = setInterval(async () => {
-    if (getIsToggling()) return;
-    const adapters = await getPhysicalAdapters();
-    if (mainWindow && mainWindow.webContents && !getIsToggling()) {
-      mainWindow.webContents.send('adapters-updated', adapters);
-    }
-  }, 4000);
 });
 
 // Second instance handling
 app.on('second-instance', (event, commandLine, workingDirectory) => {
   log(`Second instance event: commandLine=${JSON.stringify(commandLine)}, workingDirectory=${workingDirectory}`);
-  if (mainWindow) {
-    if (mainWindow.isMinimized()) mainWindow.restore();
-    mainWindow.show();
-    mainWindow.focus();
-  }
+  showWindow();
 });
 
 app.on('will-quit', () => {
   const { globalShortcut } = require('electron');
   globalShortcut.unregisterAll();
-  if (pollingInterval) {
-    clearInterval(pollingInterval);
-  }
+  stopPolling();
 });
 
 app.on('window-all-closed', () => {
+  const settings = getSettings();
   if (process.platform !== 'darwin') {
-    app.quit();
+    if (!settings.minimizeToTray || app.isQuitting) {
+      app.quit();
+    }
   }
 });
 
@@ -185,7 +226,7 @@ ipcMain.on('minimize-window', () => {
 ipcMain.on('close-window', () => {
   const settings = getSettings();
   if (settings.minimizeToTray) {
-    if (mainWindow) mainWindow.hide();
+    if (mainWindow) mainWindow.close();
   } else {
     app.isQuitting = true;
     app.quit();

@@ -4,7 +4,7 @@ const { getIsToggling, getPhysicalAdapters, toggleAllAdapters, runToggleAction }
 
 let tray = null;
 
-function createTray(getMainWindow) {
+function createTray(showWindow) {
   // Load custom branding icon and resize for system tray (16x16)
   const iconPath = path.join(__dirname, '../renderer/icon.png');
   let trayIcon = nativeImage.createFromPath(iconPath);
@@ -22,8 +22,7 @@ function createTray(getMainWindow) {
   
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Show NetOut', click: () => { 
-        const mainWindow = getMainWindow();
-        if (mainWindow) mainWindow.show(); 
+        showWindow();
       } 
     },
     { type: 'separator' },
@@ -44,10 +43,7 @@ function createTray(getMainWindow) {
   
   tray.setContextMenu(contextMenu);
   tray.on('double-click', () => {
-    const mainWindow = getMainWindow();
-    if (mainWindow) {
-      mainWindow.show();
-    }
+    showWindow();
   });
 
   return tray;
